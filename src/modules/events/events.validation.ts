@@ -1,3 +1,4 @@
+import { ObjectId } from 'mongodb';
 import { z } from 'zod';
 export const createEventsSchema = z.object({
     title: z
@@ -28,3 +29,8 @@ export const createEventsSchema = z.object({
 export const eventQuerySchema = z.object({
     limit: z.coerce.number().int().min(1).max(100).optional(),
 });
+
+export const eventIdSchema = z.object({
+    id: z.string().refine((id) => ObjectId.isValid(id), 'Invalid event ID'),
+});
+
