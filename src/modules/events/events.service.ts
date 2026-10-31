@@ -1,31 +1,32 @@
-import { getDB } from "../../config/db.js";
-import type { Event } from "./events.type.js";
+import { getDB } from '../../config/db.js';
+import type { Event } from './events.type.js';
 
 const eventsCollection = () => getDB().collection('events');
-const now = new Date();
 
-
-export const createEventService = async(data: Event) => {
+export const createEventService = async (data: Event) => {
+    const now = new Date();
     const event = {
         ...data,
-        eventDate: data.eventDate,
+        eventDate: new Date(data.eventDate),
         createdAt: now,
-        updatedAt: now
-    }
+        updatedAt: now,
+    };
 
     const result = await eventsCollection().insertOne(event);
     return { event, _id: result.insertedId };
 };
 
-export const getUpcomingEventsService = async (limit=6) => {
-    const events = await eventsCollection()
+export const getUpcomingEventsService = async (limit?: number) => {
+    const now = new Date();
+    const cursor = eventsCollection()
         .find({ eventDate: { $gt: now } })
-        .sort({ eventDate: 1 })
-        .limit(limit)
-        .toArray();
-    
-    return events;
-}
+        .sort({ eventDate: 1 });
+
+    if (limit !== undefined) {
+        cursor.limit(limit);
+    }
+    return cursor.toArray();
+};
 
 // export const getUpcomingEvent = async (id: string) => {
 //     const event = await eventsCollection().findOne({id});

@@ -1,21 +1,28 @@
-import type { NextFunction, Request, Response } from "express";
-import { type ZodType } from "zod";
+import type { Request, Response, NextFunction } from 'express';
+import type { ZodType } from 'zod';
 
-export const validRequest = (schema: ZodType) => {
+type ValidationSource = 'body' | 'query' | 'params';
+
+export const validateRequest = (
+    schema: ZodType,
+    source: ValidationSource = 'body',
+) => {
     return (req: Request, res: Response, next: NextFunction) => {
-        const result = schema.safeParse(req.body);
+        const result = schema.safeParse(req[source]);
+
         if (!result.success) {
             return res.status(400).json({
-                success: 'false',
-                message: "Validation failed",
-                errors: result.error.issues.map(issue => ({
+                success: false,
+                message: 'Validation failed',
+                errors: result.error.issues.map((issue) => ({
                     field: issue.path.join('.'),
-                    message:issue.message
-                }))
-            })
+                    message: issue.message,
+                })),
+            });
         }
-        req.body = result.data;
-        next();
 
-    }
-}
+        res.locals.validated = result.data;
+
+        next();
+    };
+};

@@ -1,12 +1,14 @@
 import { Router } from 'express';
-import { validRequest } from '../../middlewares/validateRequest.js';
-import { createEventsSchema } from './events.validation.js';
+import { validateRequest } from '../../middlewares/validateRequest.js';
+
+import { createEventsSchema, eventQuerySchema } from './events.validation.js';
+
 import { createEvent, getUpcomingEvents } from './events.controller.js';
 
 const router = Router();
 
-router.post('/', validRequest(createEventsSchema), createEvent)
-router.get('/', getUpcomingEvents);
+router.get('/', validateRequest(eventQuerySchema, 'query'), getUpcomingEvents);
 
+router.post('/', validateRequest(createEventsSchema), createEvent);
 
 export default router;

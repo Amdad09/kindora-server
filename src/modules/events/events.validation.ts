@@ -1,4 +1,4 @@
-import {z} from 'zod';
+import { z } from 'zod';
 export const createEventsSchema = z.object({
     title: z
         .string()
@@ -23,4 +23,8 @@ export const createEventsSchema = z.object({
         .trim()
         .min(3, 'Location must be at least 3 characters'),
     eventDate: z.iso.datetime({ message: 'Please provide a valid event date' }),
+});
+
+export const eventQuerySchema = z.object({
+    limit: z.coerce.number().int().min(1).max(100).optional(),
 });
