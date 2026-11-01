@@ -1,12 +1,13 @@
-import { ObjectId } from 'mongodb';
+import { ObjectId, type Filter } from 'mongodb';
 import { getDB } from '../../config/db.js';
-import type { Event } from './events.type.js';
+import type { CreateEventInput, EventDocument } from './events.type.js';
 
-const eventsCollection = () => getDB().collection('events');
+const eventsCollection = () => getDB().collection<EventDocument>('events');
 
-export const createEventService = async (data: Event) => {
+export const createEventService = async (data: CreateEventInput) => {
     const now = new Date();
-    const event = {
+
+    const event: EventDocument = {
         ...data,
         eventDate: new Date(data.eventDate),
         createdAt: now,
@@ -14,27 +15,57 @@ export const createEventService = async (data: Event) => {
     };
 
     const result = await eventsCollection().insertOne(event);
-    return { event, _id: result.insertedId };
+
+    return {
+        ...event,
+        _id: result.insertedId,
+    };
 };
 
-export const getUpcomingEventsService = async (limit?: number) => {
+export const getUpcomingEventsService = async (
+    page: number,
+    limit: number,
+    eventType?: string,
+) => {
     const now = new Date();
-    const cursor = eventsCollection()
-        .find({ eventDate: { $gt: now } })
-        .sort({ eventDate: 1 });
 
-    if (limit !== undefined) {
-        cursor.limit(limit);
+    // Step 1: Build MongoDB filter
+    const filter: Filter<EventDocument> = {
+        eventDate: { $gt: now },
+    };
+
+    // Step 2: Apply category filter
+    if (eventType) {
+        filter.eventType = eventType;
     }
-    return cursor.toArray();
+
+    // Step 3: Calculate pagination offset
+    const skip = (page - 1) * limit;
+
+    // Step 4: Fetch events and total count together
+    const [events, total] = await Promise.all([
+        eventsCollection()
+            .find(filter)
+            .sort({ eventDate: 1 })
+            .skip(skip)
+            .limit(limit)
+            .toArray(),
+
+        eventsCollection().countDocuments(filter),
+    ]);
+
+    return {
+        events,
+        total,
+    };
 };
 
 export const getEventByIdService = async (id: string) => {
-    if (!ObjectId.isValid) {
+    if (!ObjectId.isValid(id)) {
         return null;
     }
-    const event = await eventsCollection().findOne({
-        _id: new ObjectId(id)
+
+    return eventsCollection().findOne({
+        _id: new ObjectId(id),
     });
-    return event;
 };

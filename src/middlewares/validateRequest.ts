@@ -23,6 +23,6 @@ export const validateRequest = (
 
         res.locals.validated = result.data;
 
-        next();
+        return next();
     };
 };

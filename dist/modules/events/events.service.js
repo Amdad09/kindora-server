@@ -1,3 +1,4 @@
+import { ObjectId } from 'mongodb';
 import { getDB } from '../../config/db.js';
 const eventsCollection = () => getDB().collection('events');
 export const createEventService = async (data) => {
@@ -9,7 +10,10 @@ export const createEventService = async (data) => {
         updatedAt: now,
     };
     const result = await eventsCollection().insertOne(event);
-    return { event, _id: result.insertedId };
+    return {
+        ...event,
+        _id: result.insertedId,
+    };
 };
 export const getUpcomingEventsService = async (limit) => {
     const now = new Date();
@@ -21,6 +25,11 @@ export const getUpcomingEventsService = async (limit) => {
     }
     return cursor.toArray();
 };
-// export const getUpcomingEvent = async (id: string) => {
-//     const event = await eventsCollection().findOne({id});
-// };
+export const getEventByIdService = async (id) => {
+    if (!ObjectId.isValid(id)) {
+        return null;
+    }
+    return eventsCollection().findOne({
+        _id: new ObjectId(id),
+    });
+};

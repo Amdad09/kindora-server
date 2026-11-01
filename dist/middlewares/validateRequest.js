@@ -12,6 +12,6 @@ export const validateRequest = (schema, source = 'body') => {
             });
         }
         res.locals.validated = result.data;
-        next();
+        return next();
     };
 };
