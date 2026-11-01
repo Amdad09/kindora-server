@@ -1,4 +1,4 @@
-import type { Request, Response, NextFunction } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 import {
     createEventService,
     deleteEventService,
@@ -79,6 +79,7 @@ export const getUpcomingEvents = async (
     next: NextFunction,
 ) => {
     try {
+        const auth = res.locals.auth as { userId: string } | undefined;
         const { page, limit, eventType } = res.locals.validated as z.infer<
             typeof eventQuerySchema
         >;
@@ -87,6 +88,7 @@ export const getUpcomingEvents = async (
             page,
             limit,
             eventType,
+            auth?.userId,
         );
 
         res.status(200).json({

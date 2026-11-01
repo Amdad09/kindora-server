@@ -30,6 +30,7 @@ export const getUpcomingEventsService = async (
     page: number,
     limit: number,
     eventType?: string,
+    userId?: string,
 ) => {
     const now = new Date();
 
@@ -43,14 +44,46 @@ export const getUpcomingEventsService = async (
 
     const skip = (page - 1) * limit;
 
-    const [events, total] = await Promise.all([
-        eventsCollection()
-            .find(filter)
-            .sort({ eventDate: 1 })
-            .skip(skip)
-            .limit(limit)
-            .toArray(),
+    const pipeline = [
+        { $match: filter },
+        { $sort: { eventDate: 1 as const } },
+        { $skip: skip },
+        { $limit: limit },
+        {
+            $lookup: {
+                from: 'eventRegistrations',
+                let: { eventId: '$_id' },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $and: [
+                                    { $eq: ['$eventId', '$$eventId'] },
+                                    ...(userId
+                                        ? [{ $eq: ['$userId', userId] }]
+                                        : []),
+                                ],
+                            },
+                        },
+                    },
+                ],
+                as: 'registrations',
+            },
+        },
+        {
+            $addFields: {
+                isJoined: { $gt: [{ $size: '$registrations' }, 0] },
+            },
+        },
+        {
+            $project: {
+                registrations: 0,
+            },
+        },
+    ];
 
+    const [events, total] = await Promise.all([
+        eventsCollection().aggregate(pipeline).toArray(),
         eventsCollection().countDocuments(filter),
     ]);
 

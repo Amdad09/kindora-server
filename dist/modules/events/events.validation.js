@@ -43,3 +43,4 @@ export const eventQuerySchema = z.object({
 export const eventIdSchema = z.object({
     id: z.string().refine((id) => ObjectId.isValid(id), 'Invalid event ID'),
 });
+export const updateEventSchema = createEventsSchema;

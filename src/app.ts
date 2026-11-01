@@ -27,8 +27,9 @@ app.get('/', (_req, res) => {
 });
 
 app.use('/health', healthRoute);
-app.use('/events', eventsRoute);
 app.use('/events', eventRegistrationRoute);
+app.use('/events', eventsRoute);
+
 // Unknown routes
 app.use(notFound);
 

@@ -45,6 +45,50 @@ export const joinEventService = async (eventId: string, userId: string) => {
     }
 };
 
+export const getJoinedEventsService = async (userId: string) => {
+    const db = getDB();
+
+    const joinedEvents = await db
+        .collection<EventRegistrationDocument>('eventRegistrations')
+        .aggregate([
+            {
+                $match: { userId },
+            },
+            {
+                $lookup: {
+                    from: 'events',
+                    localField: 'eventId',
+                    foreignField: '_id',
+                    as: 'event',
+                },
+            },
+            {
+                $unwind: '$event',
+            },
+            {
+                $project: {
+                    _id: '$event._id',
+                    title: '$event.title',
+                    description: '$event.description',
+                    eventType: '$event.eventType',
+                    imageUrl: '$event.imageUrl',
+                    location: '$event.location',
+                    eventDate: '$event.eventDate',
+                    createdBy: '$event.createdBy',
+                    createdAt: '$event.createdAt',
+                    updatedAt: '$event.updatedAt',
+                    joinedAt: 1,
+                },
+            },
+            {
+                $sort: { joinedAt: -1 },
+            },
+        ])
+        .toArray();
+
+    return joinedEvents;
+};
+
 export const getEventRegistrationCountService = async (eventId: string) => {
     if (!ObjectId.isValid(eventId)) {
         return { status: 'invalid-id' as const };

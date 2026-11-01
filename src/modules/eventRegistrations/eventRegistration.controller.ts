@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import { joinEventService } from './eventRegistration.service.js';
+import { getJoinedEventsService, joinEventService } from './eventRegistration.service.js';
 import { getEventRegistrationCountService } from './eventRegistration.service.js';
 import { leaveEventService } from './eventRegistration.service.js';
 
@@ -33,6 +33,28 @@ export const joinEvent = async (
             success: true,
             message: 'Successfully joined the event',
             data: result.registration,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getJoinedEvents = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+) => {
+    try {
+        const { userId } = res.locals.auth as {
+            userId: string;
+        };
+
+        const joinedEvents = await getJoinedEventsService(userId);
+
+        return res.status(200).json({
+            success: true,
+            message: 'Joined events retrieved successfully',
+            data: joinedEvents,
         });
     } catch (error) {
         next(error);
