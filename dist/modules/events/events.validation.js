@@ -28,7 +28,17 @@ export const createEventsSchema = z.object({
     }),
 });
 export const eventQuerySchema = z.object({
-    limit: z.coerce.number().int().min(1).max(100).optional(),
+    page: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(100).default(10),
+    eventType: z
+        .enum([
+        'Environment',
+        'Charity',
+        'Healthcare',
+        'Education',
+        'Community',
+    ])
+        .optional(),
 });
 export const eventIdSchema = z.object({
     id: z.string().refine((id) => ObjectId.isValid(id), 'Invalid event ID'),

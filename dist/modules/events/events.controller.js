@@ -15,12 +15,18 @@ export const createEvent = async (req, res, next) => {
 };
 export const getUpcomingEvents = async (req, res, next) => {
     try {
-        const { limit } = res.locals.validated;
-        const events = await getUpcomingEventsService(limit);
+        const { page, limit, eventType } = res.locals.validated;
+        const { events, total } = await getUpcomingEventsService(page, limit, eventType);
         res.status(200).json({
             success: true,
-            message: 'Upcoming events retrieved successfully',
+            message: 'Events retrieved successfully',
             data: events,
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit),
+            },
         });
     }
     catch (err) {

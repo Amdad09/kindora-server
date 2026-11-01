@@ -15,15 +15,32 @@ export const createEventService = async (data) => {
         _id: result.insertedId,
     };
 };
-export const getUpcomingEventsService = async (limit) => {
+export const getUpcomingEventsService = async (page, limit, eventType) => {
     const now = new Date();
-    const cursor = eventsCollection()
-        .find({ eventDate: { $gt: now } })
-        .sort({ eventDate: 1 });
-    if (limit !== undefined) {
-        cursor.limit(limit);
+    // Step 1: Build MongoDB filter
+    const filter = {
+        eventDate: { $gt: now },
+    };
+    // Step 2: Apply category filter
+    if (eventType) {
+        filter.eventType = eventType;
     }
-    return cursor.toArray();
+    // Step 3: Calculate pagination offset
+    const skip = (page - 1) * limit;
+    // Step 4: Fetch events and total count together
+    const [events, total] = await Promise.all([
+        eventsCollection()
+            .find(filter)
+            .sort({ eventDate: 1 })
+            .skip(skip)
+            .limit(limit)
+            .toArray(),
+        eventsCollection().countDocuments(filter),
+    ]);
+    return {
+        events,
+        total,
+    };
 };
 export const getEventByIdService = async (id) => {
     if (!ObjectId.isValid(id)) {
