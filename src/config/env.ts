@@ -5,7 +5,7 @@ const envSchema = z.object({
     PORT: z.coerce.number().int().positive().default(5000),
     DB_NAME: z.string().min(3),
     MONGO_URI: z.string().min(3),
-    CLIENT_URL: z.url().default('http://localhost:3000'),
+    CLIENT_URL: z.url(),
     BETTER_AUTH_URL: z.url(),
 });
 
