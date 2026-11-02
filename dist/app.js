@@ -9,6 +9,7 @@ import { env } from './config/env.js';
 const app = express();
 app.use(cors({
     origin: env.clientUrl,
+    credentials: true,
 }));
 app.use(express.json({ limit: '1mb' }));
 app.get('/', (_req, res) => {
@@ -18,8 +19,8 @@ app.get('/', (_req, res) => {
     });
 });
 app.use('/health', healthRoute);
-app.use('/events', eventsRoute);
 app.use('/events', eventRegistrationRoute);
+app.use('/events', eventsRoute);
 // Unknown routes
 app.use(notFound);
 // Centralized error handler — must be last

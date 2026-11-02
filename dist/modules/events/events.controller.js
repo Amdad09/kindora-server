@@ -37,8 +37,9 @@ export const getMyEvents = async (req, res, next) => {
 };
 export const getUpcomingEvents = async (req, res, next) => {
     try {
+        const auth = res.locals.auth;
         const { page, limit, eventType } = res.locals.validated;
-        const { events, total } = await getUpcomingEventsService(page, limit, eventType);
+        const { events, total } = await getUpcomingEventsService(page, limit, eventType, auth?.userId);
         res.status(200).json({
             success: true,
             message: 'Events retrieved successfully',

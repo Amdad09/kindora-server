@@ -16,7 +16,7 @@ export const createEventService = async (data, userId) => {
         _id: result.insertedId,
     };
 };
-export const getUpcomingEventsService = async (page, limit, eventType) => {
+export const getUpcomingEventsService = async (page, limit, eventType, userId) => {
     const now = new Date();
     const filter = {
         eventDate: { $gt: now },
@@ -25,13 +25,45 @@ export const getUpcomingEventsService = async (page, limit, eventType) => {
         filter.eventType = eventType;
     }
     const skip = (page - 1) * limit;
+    const pipeline = [
+        { $match: filter },
+        { $sort: { eventDate: 1 } },
+        { $skip: skip },
+        { $limit: limit },
+        {
+            $lookup: {
+                from: 'eventRegistrations',
+                let: { eventId: '$_id' },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $and: [
+                                    { $eq: ['$eventId', '$$eventId'] },
+                                    ...(userId
+                                        ? [{ $eq: ['$userId', userId] }]
+                                        : []),
+                                ],
+                            },
+                        },
+                    },
+                ],
+                as: 'registrations',
+            },
+        },
+        {
+            $addFields: {
+                isJoined: { $gt: [{ $size: '$registrations' }, 0] },
+            },
+        },
+        {
+            $project: {
+                registrations: 0,
+            },
+        },
+    ];
     const [events, total] = await Promise.all([
-        eventsCollection()
-            .find(filter)
-            .sort({ eventDate: 1 })
-            .skip(skip)
-            .limit(limit)
-            .toArray(),
+        eventsCollection().aggregate(pipeline).toArray(),
         eventsCollection().countDocuments(filter),
     ]);
     return { events, total };
