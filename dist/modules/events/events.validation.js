@@ -43,6 +43,12 @@ export const eventQuerySchema = z.object({
         'Community',
     ])
         .optional(),
+    search: z
+        .string()
+        .trim()
+        .min(1, 'Search cannot be empty')
+        .max(100, 'Search cannot exceed 100 characters')
+        .optional(),
 });
 export const eventIdSchema = z.object({
     id: z.string().refine((id) => ObjectId.isValid(id), 'Invalid event ID'),
