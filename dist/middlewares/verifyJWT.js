@@ -35,6 +35,11 @@ export const verifyJWT = async (req, res, next) => {
     }
     catch (error) {
         if (error instanceof errors.JOSEError) {
+            console.error('[JWT Verification Error]', {
+                name: error.name,
+                code: error.code,
+                message: error.message,
+            });
             return res.status(401).json({
                 success: false,
                 message: 'Invalid or expired authentication token',

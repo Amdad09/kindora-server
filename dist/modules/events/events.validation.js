@@ -23,8 +23,12 @@ export const createEventsSchema = z.object({
         .string()
         .trim()
         .min(3, 'Location must be at least 3 characters'),
-    eventDate: z.iso.datetime({
+    eventDate: z.iso
+        .datetime({
         message: 'Please provide a valid event date',
+    })
+        .refine((date) => new Date(date) > new Date(), {
+        message: 'Event date must be in the future',
     }),
 });
 export const eventQuerySchema = z.object({
