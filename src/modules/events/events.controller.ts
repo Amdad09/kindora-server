@@ -73,6 +73,40 @@ export const getMyEvents = async (
     }
 };
 
+// export const getUpcomingEvents = async (
+//     req: Request,
+//     res: Response,
+//     next: NextFunction,
+// ) => {
+//     try {
+//         const auth = res.locals.auth as { userId: string } | undefined;
+//         const { page, limit, eventType } = res.locals.validated as z.infer<
+//             typeof eventQuerySchema
+//         >;
+
+//         const { events, total } = await getUpcomingEventsService(
+//             page,
+//             limit,
+//             eventType,
+//             auth?.userId,
+//         );
+
+//         res.status(200).json({
+//             success: true,
+//             message: 'Events retrieved successfully',
+//             data: events,
+//             pagination: {
+//                 page,
+//                 limit,
+//                 total,
+//                 totalPages: Math.ceil(total / limit),
+//             },
+//         });
+//     } catch (err) {
+//         next(err);
+//     }
+// };
+
 export const getUpcomingEvents = async (
     req: Request,
     res: Response,
@@ -80,15 +114,16 @@ export const getUpcomingEvents = async (
 ) => {
     try {
         const auth = res.locals.auth as { userId: string } | undefined;
-        const { page, limit, eventType } = res.locals.validated as z.infer<
-            typeof eventQuerySchema
-        >;
+
+        const { page, limit, eventType, search } = res.locals
+            .validated as z.infer<typeof eventQuerySchema>;
 
         const { events, total } = await getUpcomingEventsService(
             page,
             limit,
             eventType,
             auth?.userId,
+            search,
         );
 
         res.status(200).json({
@@ -106,6 +141,7 @@ export const getUpcomingEvents = async (
         next(err);
     }
 };
+
 
 export const getEventById = async (
     req: Request,

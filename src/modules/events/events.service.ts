@@ -26,11 +26,76 @@ export const createEventService = async (
     };
 };
 
+// export const getUpcomingEventsService = async (
+//     page: number,
+//     limit: number,
+//     eventType?: string,
+//     userId?: string,
+// ) => {
+//     const now = new Date();
+
+//     const filter: Filter<EventDocument> = {
+//         eventDate: { $gt: now },
+//     };
+
+//     if (eventType) {
+//         filter.eventType = eventType;
+//     }
+
+//     const skip = (page - 1) * limit;
+
+//     const pipeline = [
+//         { $match: filter },
+//         { $sort: { eventDate: 1 as const } },
+//         { $skip: skip },
+//         { $limit: limit },
+//         {
+//             $lookup: {
+//                 from: 'eventRegistrations',
+//                 let: { eventId: '$_id' },
+//                 pipeline: [
+//                     {
+//                         $match: {
+//                             $expr: {
+//                                 $and: [
+//                                     { $eq: ['$eventId', '$$eventId'] },
+//                                     ...(userId
+//                                         ? [{ $eq: ['$userId', userId] }]
+//                                         : []),
+//                                 ],
+//                             },
+//                         },
+//                     },
+//                 ],
+//                 as: 'registrations',
+//             },
+//         },
+//         {
+//             $addFields: {
+//                 isJoined: { $gt: [{ $size: '$registrations' }, 0] },
+//             },
+//         },
+//         {
+//             $project: {
+//                 registrations: 0,
+//             },
+//         },
+//     ];
+
+//     const [events, total] = await Promise.all([
+//         eventsCollection().aggregate(pipeline).toArray(),
+//         eventsCollection().countDocuments(filter),
+//     ]);
+
+//     return { events, total };
+// };
+
 export const getUpcomingEventsService = async (
     page: number,
     limit: number,
     eventType?: string,
     userId?: string,
+    search?: string,
 ) => {
     const now = new Date();
 
@@ -40,6 +105,16 @@ export const getUpcomingEventsService = async (
 
     if (eventType) {
         filter.eventType = eventType;
+    }
+
+    if (search) {
+        const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+        filter.$or = [
+            { title: { $regex: safeSearch, $options: 'i' } },
+            { description: { $regex: safeSearch, $options: 'i' } },
+            { location: { $regex: safeSearch, $options: 'i' } },
+        ];
     }
 
     const skip = (page - 1) * limit;
